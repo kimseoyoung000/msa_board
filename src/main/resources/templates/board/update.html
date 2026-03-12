@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/layout_main :: layout(~{::title}, ~{::link}, ~{::style}, ~{::script}, ~{::section})}" 
+      lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"> 
+<!-- ::title 은   현재 페이지의 title   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 첫번째 파라미터로 전달한다. -->
+<!-- ::link 는    현재 페이지의 link    태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 두번째  파라미터로 전달한다. -->
+<!-- ::style 은   현재 페이지의 style   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 세번째 파라미터로 전달한다. -->
+<!-- ::script 는  현재 페이지의 script  태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 네번째 파라미터로 전달한다. -->
+<!-- ::section 은 현재 페이지의 section 태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 다섯번째 파라미터로 전달한다. -->
+<!-- 타임리프는 백엔드 서버에서 HTML을 동적으로 렌더링하는 용도로 사용된다. -->
+
+<head>
+<meta charset="UTF-8">
+<title>게시글 수정하기</title>
+
+<link rel="stylesheet" href="" />
+
+<style type="text/css"></style>
+
+<!--/* 자바스크립트 인라인 */-->
+<script th:inline="javascript">
+ /*<![CDATA[*/
+
+   $(function(){
+	   
+	    // 수정버튼
+		$("button#btnUpdate").click(function(){
+			  
+			// 제목 유효성 검사
+			const subject = $("input#subject").val().trim();
+			if(subject == "") {
+				alert("글제목을 입력하세요!!");
+				return;
+			}
+			
+			// 내용 유효성 검사
+			const content = $("textarea#content").val().trim();
+			if(content == "") {
+				alert("내용을 입력하세요!!");
+				return;
+			}
+				
+			// 폼(form) 을 전송(submit)
+			const frm = document.updateFrm;
+			frm.method = "POST";
+			frm.action = /*[[@{/board/update}]]*/ ""; // Natural Template 을 사용하여 데이터 입력한 것임. 
+			  
+			  //  웹브라우저에서 HTML만 열 경우에는 /* */ 부분은 주석으로 처리되어 정적인 데이터값인 '' 만 남게 되어서 frm.action = ''; 으로 되어지고
+			  //  서버에서 랜더링 되어 Thymeleaf로 처리될 경우 /* */ 부분은 삭제되고 frm.action = [[@{/board/update}]]; 으로 되어진다.
+			  //  <!--/*  [[]] 은 Thymeleaf에서 값을 넣어줄 때 사용하는 문법이다.  */-->    
+			  //  @{/board/update} 은 context path를 자동으로 포함한 URL을 생성해주는 것이다. 즉, "context path"+"/board/update" 인 것이다.
+			  
+			  //  Natural Template 을 사용하는 이유는 웹디자이너 나 웹퍼블리셔는 굳이 서버를 랜더링 하지 않고, 그냥 html 파일만 열어서 정적인 데이터만 있으면 일을 할 수 있으므로
+			  //  Natural Template 을 사용하도록 한다. 그러면 개발자와 웹디자이너 나 웹퍼블리셔가 협업이 가능하며, 프로젝트 개발 시간을 단축할 수 있기 때문이다.
+			frm.submit();   
+		 });
+	   
+   });// end of $(function(){});-------------------------------------------	 
+  
+ /*]]>*/
+</script>
+
+</head>
+<body>
+  
+  <section>
+  
+	  <div style="display: flex;" class="container" >
+		<div style="margin:auto; padding-left: 3%;">
+		    <h3 class="my-5">게시글 수정하기(Oracle 데이터베이스)</h3> 
+		    
+		    <form name="updateFrm">
+		    
+		    <!-- CSRF 토큰 설정 -->
+		    <input type="hidden"
+		           th:name="${_csrf.parameterName}"
+		           th:value="${_csrf.token}" />
+		            
+		      <table style="width: 1024px" class="table table-bordered">
+		         <tr>
+		            <th style="width: 15%; background-color: #DDDDDD;">제목</th>
+		            <td>
+		                <input type="hidden" name="num" th:value="${boardDto.num}" />
+		                <input type="text" name="subject" id="subject" size="100" th:value="${boardDto.subject}" />
+		            </td>
+		         </tr>
+		         <tr>
+		            <th style="width: 15%; background-color: #DDDDDD;">작성자</th>
+		            <td>
+		                <input type="hidden" name="memberid" th:value="${#authentication.principal.username}" readonly /> 
+		                <input type="text" name="name" th:value="${#authentication.principal.memberName}" readonly />       
+		            </td>
+		         </tr>
+		         <tr>
+		            <th style="width: 15%; background-color: #DDDDDD; vertical-align: middle;">내용</th>
+		            <td>
+		               <textarea style="width: 100%; height: 400px;" name="content" id="content" th:text="${boardDto.content}"></textarea>       
+		            </td>
+		         </tr>
+		      </table>
+		      
+		      <div style="margin: 20px;">
+		         <button type="button" class="btn btn-secondary btn-sm mr-3" id="btnUpdate">수정하기</button>
+		         <button type="reset"  class="btn btn-secondary btn-sm mr-3">다시입력</button>
+		         <button type="button" class="btn btn-secondary btn-sm" onclick="javascript:location.href='list'">취소</button>
+		      </div>
+		         
+		    </form>
+		</div> 
+	  </div> 
+	
+  </section>
+  
+</body>
+</html> 

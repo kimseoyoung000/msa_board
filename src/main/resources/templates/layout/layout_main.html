@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html th:fragment="layout(title, link, css, script, content)"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  
+  <!--/* CSRF 는 위변조 방지에 대한 사용유무를 체크하는 것  */-->
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+  <!-- 1. 맨 위의 layout fragment 의 title 내용으로 교체 되어짐 -->
+  <title th:replace="${title}">레이아웃 타이틀</title>
+
+  <!-- Required meta tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> 
+  
+  <!-- Bootstrap CSS --> 
+                        <!-- 소스위치 resources/static/bootstrap-4.6.2-dist/css/bootstrap.min.css -->
+  <link rel="stylesheet" type="text/css" th:href="@{/bootstrap-4.6.2-dist/css/bootstrap.min.css}">
+  
+  
+  <!-- 직접 만든 메인 CSS --> 
+                        <!-- 소스위치 resources/static/css/mainstyle.css -->
+  <link rel="stylesheet" type="text/css" th:href="@{/css/mainstyle.css}" />
+  
+  <!-- 2. 맨 위의 layout fragment 의 link 내용으로 교체 되어짐 -->
+  <link th:replace="${link}" rel="stylesheet" />
+  
+  <!-- 3. 맨 위의 layout fragment 의 css 내용으로 교체 되어짐 -->
+  <style th:replace="${css}" type="text/css"></style>
+  
+  <!-- Optional JavaScript -->
+                <!-- 소스위치 resources/static/js/jquery-3.7.1.min.js -->
+  <script type="text/javascript" th:src="@{/js/jquery-3.7.1.min.js}"></script>
+  <script type="text/javascript" th:src="@{/bootstrap-4.6.2-dist/js/bootstrap.bundle.min.js}" ></script> 
+  
+  
+  <!-- 4. 맨 위의 layout fragment 의 script 내용으로 교체 되어짐 -->
+  <script th:replace="${script}" th:inline="javascript"></script>
+  
+</head>
+<body>
+	<div id="mycontainer">
+		<!-- >>> 템플릿 조각 <<< 
+		     공통부분을 템플릿화 하여 필요한 부분에서 해당 템플릿을 불러와 설정하는 기능.
+		     <예> 좌측 카테고리영역, 상단 영역, 하단 영역 등 공통으로 사용되는 영역을 모듈화 시킨다. 
+		-->
+		<div id="myheader" th:insert="~{fragment/header :: main_header}"></div>
+		
+		<!-- 5. 맨 위의 layout fragment 의 content 내용으로 교체 되어짐 -->
+		<div id="mycontent" th:insert="${content}"></div>
+		
+		<!-- >>> 템플릿 조각 <<< 
+		     공통부분을 템플릿화 하여 필요한 부분에서 해당 템플릿을 불러와 설정하는 기능.
+		     <예> 좌측 카테고리영역, 상단 영역, 하단 영역 등 공통으로 사용되는 영역을 모듈화 시킨다. 
+		-->		
+		<div id="myfooter" th:insert="~{fragment/footer :: footer}"></div>
+	</div>
+	
+	<!--/* 자바스크립트 인라인 */-->
+	<script th:inline="javascript">
+	/*<![CDATA[*/
+
+	  /*
+	    fetch()는 JavaScript에서 HTTP 요청을 보낼 수 있게 해주는 JavaScript 내장 함수이다.
+	      쉽게 말해서, 웹 브라우저에서 서버와 데이터를 주고받을 때 사용하는 함수이다.
+	    -  fetch(url)만 적으면 기본적으로 GET 방식으로 요청을 보낸다.
+	    -  .then()을 이용해 응답을 처리한다.
+	    -  response.json() 또는 response.text()로 응답 본문을 읽는다.
+	    -  서버에서 보내준 응답데이터가 JSON 형식일 경우 response.json() 으로 읽으면 그 응답데이터를 JSON 형식의 JavaScript 객체로 바꿔준다.
+	    -  서버에서 보내준 응답데이터가 JSON 형식이 아닐 경우 response.text() 으로 읽으면 그 응답데이터 글자 그대로 읽어들인다.
+	    
+	    
+	    async/await 란?
+	    - Promise 가 출시된 후에 나온 것으로서, "비동기 작업(Promise)" 을 더 깔끔하게 작성할 수 있는 문법이다.
+	    - await 는 Promise 에서 사용되어지는	then() 과 같은 기능을 해주는 것인데 마치 동기 코드처럼 읽히게 해준다.
+	    
+	    Promise 대신에 async/await 를 왜 사용할까?
+	    - 자바스크립트에서 fetch()나 setTimeout() 같은 작업은 바로 결과가 안 나오는 비동기 작업이다.
+		  예전에는 .then() 체인을 써야 했지만, async/await를 쓰면 더 직관적이고 에러 처리도 쉬워지기 때문이다.
+		
+	    -------------------------------------------------------	  
+		 키워드	 의미
+		-------------------------------------------------------
+		 async	 비동기 함수임을 정의함. 이 함수는 항상 Promise를 반환함
+		 await	 Promise 가 끝날 때까지 기다림  
+		-------------------------------------------------------
+		
+		>> 기본 사용법 <<
+		async function getData() {
+		  const res = await fetch("https://api.example.com/data");
+		  const data = await res.json();
+		  console.log(data);
+		}
+		getData();
+		
+		>> 실제 동작 흐름 <<
+		async function test() {
+		  console.log("1");
+		  await new Promise(resolve => setTimeout(resolve, 1000));
+		  console.log("2");
+		}
+		test();
+		
+		1
+		(1초 후)
+		2
+		- await가 1초 동안 멈추고 기다렸다가 다음 줄 실행해요.
+		
+		>> 에러 처리도 쉬움 <<
+		try...catch와 함께 쓰면, 비동기 작업 중 에러도 깔끔하게 잡을 수 있다.
+		
+		async function fetchData() {
+		  try {
+		    const res = await fetch("https://api.example.com/data");
+		    const data = await res.json();
+		    console.log(data);
+		  } catch (error) {
+		    console.error("에러 발생:", error);
+		  }
+		}
+		
+		>> 기존 방식 (.then()) <<
+		fetch(url)
+		  .then(res => res.json())
+		  .then(data => console.log(data))
+		  .catch(err => console.error(err));
+		
+		>> async/await 방식 <<
+		try {
+		  const res = await fetch(url);
+		  const data = await res.json();
+		  console.log(data);
+		} catch (err) {
+		  console.error(err);
+		}
+	    		
+	*/
+	
+	
+	// ==== 비동기 함수 fetchRequest(url, method, formData, responseType, headers = {}) 정의하기 ==== //
+		async function fetchRequest(url, method, formData, responseType, headers = {}) {
+	 // async: 이 함수는 비동기(async) 함수이므로, 내부에서 await 를 사용할 수 있다. 
+		  
+	 /*
+		     url          =>  요청을 보낼 API 주소
+		     method	      =>  HTTP 메서드 (예: "POST", "GET" 등)
+		     formData     =>  서버로 보낼 데이터 (주로 FormData 나 JSON.stringify(...))
+		     responseType =>  서버에서 받을 응답 형태 ("json" 또는 "text")
+		     headers	  =>  기본값이 빈 객체 {} 인 요청 헤더. (헤더속에 들어갈 내용을 외부에서 주입받도록 한다)
+	 */	
+		 // alert("확인용 url : "+url); 
+		 // 확인용 url : /auth/reissue
+		    
+		    const options = {  // 우리가 만든 options 객체는 fetch() 에 전달할 설정 값들을 가지고 있는 객체이다.
+					method: method, // HTTP 메서드 지정
+					headers: {
+						...headers,  // 파라미터로 넘어온 헤더 객체 그대로를 객체{} 안에 그대로 복사함(스프레드 문법 사용).
+					                 // 자바스크립트에서 ...변수는 "전개 연산자" 또는 "rest/spread 연산자" 라고 부른다.
+		                             
+					                 // ...headers, 뒤에 쉼표가 있는 게 문법적으로 잘못된 것 아닌가? 라고 생각할 수 있는데, 실제로는 ES6 객체 리터럴에서 마지막에 오는 쉼표는 허용된다. 
+		                             // 이는 Trailing Comma(후행 쉼표) 문법 때문이다. ES5 이후부터 객체, 배열, 매개변수 목록의 마지막 요소 뒤에 쉼표를 붙이는 것이 허용된다.
+	                                 // 이유: Git diff에서 줄 추가/삭제 시 충돌 줄이기, 가독성 향상 (새로운 속성 추가 시 깔끔함)
+						             // 일반적으로는 마지막 쉼표를 빼는 편이 깔끔하지만, 유지보수 고려하면 붙이는 것도 합리적이다.
+						             // 그래서 마지막에 오는 쉼표는 있어도 되고, 없어도 문법적으로 아무런 문제가 발생하지 않는다. 
+					         },
+					body: formData,  // 요청 본문 데이터
+					credentials: "include"  // 쿠키를 보내는 영역 설정
+					/*
+					   credentials: "include"
+					   ==> 서로 다른 도메인(Cross-origin)으로 쿠키를 보내려면 반드시 credentials: "include" 으로 설정해야 한다.
+					   
+					   credentials: "same-origin"
+					   ==> 기본값. 생략하면 credentials: "same-origin" 이다.
+                       ==> 같은 도메인(Same-origin) 내에서 쿠키를 보낼때 임.
+                           fetch 의 기본 설정값이므로 적지 않아도 괜찮다.
+                       
+                       credentials: "omit"    
+                       ==> 어떤 경우에도 쿠키를 보내지 않으며, 서버로부터 오는 쿠키 응답(Set-Cookie)도 무시한다.
+					*/
+			};
+			
+		    const res = await fetch(url, options); // fetch()를 호출하여 HTTP 요청을 보낸다. res는 Response(응답) 객체가 된다.
+		 // alert("확인용 res : " + res);
+		 // 확인용 res : [object Response]
+		    
+		 // console.log("확인용 res : ", res);
+		 // 확인용 res : [object Response]
+		    
+			const data = (responseType.toLowerCase() === "json") ? await res.json() : await res.text();
+			// 파라미터로 넘어온 responseType 이 "json" 이라면 응답결과물을 res.json()으로 JSON 파싱하고, 아니라면 res.text()로 텍스트로 읽기를 한다.
+		 
+		 // console.log("==> 확인용 data : ", data);
+		 // ==> 확인용 data :  {grantType: 'Bearer', accessToken: 'eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzZW95aCIsImF1dGgiO…-_uog04gL2bbLLT1nYAWVPVWj1HCGil2kYMtXwQT-t729HqVM', accessTokenExpiresIn: 1756214725625, refreshToken: 'eyJhbGciOiJIUzM4NCJ9.eyJleHAiOjE3NTY4MTk0NjV9.J5AJ…_s70uQ0vaqhmkoIAcrodpRUg_RxjWPmgWzHXC4WYEpf80bgye'} 
+			
+			if (res.ok) { // res.ok는 HTTP 상태 코드가 200~299 인지 확인하는 속성으로서, 응답 코드가 200~299 사이일 경우 true 이다.
+				return data; // !!! 성공이면 data 를 반환. !!!
+			} else {
+				throw Error(data); // 실패면 throw 로 예외 발생시킨다.
+			}
+		}// end of async function fetchRequest(url, method, formData, responseType, headers = {})-------------
+		
+	  
+	// ========================================================================================== //
+	    $(function(){
+	       
+	    	// 문서 로드가 끝나면 항상 loginCheck() 함수를 호출하여 true 또는 false 를 판단하도록 한다.
+	    	if(loginCheck()) {
+	    	   
+		    	// 로그인은 되었지만 유효기간이 지난 토큰이라면 토큰을 재발급 받아오는 함수를 호출하여 토큰을 재발급 받기
+		        /*  
+		    	  reissue()  // reissue() 함수의 리턴값은 Promise객체(JavaScript에서 "비동기 작업의 완료(또는 실패)"를 다루기 위한 객체)가 되어야 한다.
+		    	     .then(function(data){  //  .then(...) → 성공했을 때 실행할 코드
+		    		             // data 는 함수 reissue() 을 호출하여 리턴받은 Promise 객체 내에 resolve() 괄호속에 넣은 값이 data 가 되어진다. 
+		    		       console.log(data);
+		    	  });
+		        */
+		    	 
+		    	 // 또는 아래와 같이 화살표 함수로 나타낼수 있다. 
+		    	 
+		    	 // 로그인은 되었지만 유효기간이 지난 토큰이라면 토큰을 재발급 받아오는 함수를 호출하여 토큰을 재발급 받기
+		    	 reissue()  // reissue() 함수의 리턴값은 Promise객체(JavaScript에서 "비동기 작업의 완료(또는 실패)"를 다루기 위한 객체)가 되어야 한다.  
+		    	    .then(data => {   //  .then(...) → 성공했을 때 실행할 코드
+		    	       // data 는 함수 reissue() 을 호출하여 리턴받은 Promise 객체 내에 resolve() 괄호속에 넣은 값이 data 가 되어진다. 
+		    	          console.log(data); // true
+		    	    })
+		    	    .catch(error => { //  .catch(...) → 실패했을 때 실행할 코드
+		    	    	  console.log("오류발생");
+		    	    });
+	    	   
+	        }// end of if(loginCheck())----------------------------------- 
+	     
+	    });// end of $(function(){})-------------------------------------------------
+	 // ========================================================================================== // 
+	  
+		// 로그인 여부 확인 체크하기 
+		function loginCheck() {
+			const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+			// 만약에 localStorage.getItem("JWT") 가 null 또는 undefined라면, 기본적으로 빈 객체 {}를 할당.
+			
+			if( ! ("accessToken" in JWT) ) { // ("accessToken" in JWT) 은 JWT 객체에 accessToken 키가 존재하는지 확인. 
+				// JWT 객체에 accessToken 키가 존재하지 않는 경우라면   
+				$(".login-before").show();     // 로그인 이전 보여주기
+				$(".login-after").hide();      // 로그인 이후 감추기
+				$("span#member_name").empty(); // 로그인 되어진 사용자명 지우기
+				return false;
+			}
+			
+			else { // JWT 객체에 accessToken 키가 존재하는 경우라면
+				$(".login-before").hide();    // 로그인 이전 감추기
+				$(".login-after").show();     // 로그인 이후 보여주기
+				$("span#member_name").html(JWT.name); // 로그인 되어진 사용자명 표시하기
+				return true;
+			}
+		}// end of function loginCheck()---------------------
+	
+		
+		// === 유효기간이 지난 토큰이라면 토큰을 재발급 해주는 함수 정의하기 === 
+		function reissue(){
+		//  Promise 는 JavaScript에서 "비동기 작업의 완료(또는 실패)"를 다루기 위한 객체이다.
+		//  쉽게 말해서 Promise 는 "지금은 결과가 없지만, 나중에 결과를 줄께!" 라는 약속(=Promise)을 하는 객체이다.
+		
+		//	return new Promise(function(resolve, reject) {});
+		//  또는 	화살표 함수를 사용하여 아래와 같이 해도 된다.
+		//  return new Promise((resolve, reject) => {});
+		
+		/*
+		    return new Promise((resolve, reject) => {
+		    	resolve("데이터 결과값"); 
+		    	// resolve("데이터 결과값"); 는 Promise 가 성공적으로 끝났을 때 호출되는 함수로서, 
+		    	// 괄호 안에 넣는 값은 성공 처리된 결과값을 넣는 것이다.
+		    	// 마치 jQuery ajax 의 success:function(data){ } 와 같은 역할을 하는 것이다.
+		    	
+		    	reject("오류발생"); 
+		    	// reject("오류발생"); 는  Promise 가 실패했을 때 호출되는 함수로서, 
+		    	// 괄호 안에 넣는 값은 실패처리 결과값을 넣는 것이다.
+		    	// 마치 jQuery ajax 의 error:function(request, status, error){ } 와 같은 역할을 하는 것이다.
+		    });
+		*/
+		
+			return new Promise((resolve, reject) => {
+		    	
+				const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+				// 만약 "JWT"가 null 또는 undefined라면, 기본적으로 빈 객체 {}를 할당.
+					
+		     	let now = new Date().getTime();
+				let accessTokenExpiresIn = JWT.accessTokenExpiresIn;
+					
+				if(now < accessTokenExpiresIn) {
+				      console.log("액세스토큰 유효기간이 유효합니다.");
+				      return resolve(true); // 결과값을 true 로 함.
+				}
+				else {
+				     console.log("[경고]액세스토큰이 유효기간을 초과했으므로 액세스토큰이 유효하지 않아서 토큰재발급을 받아야 합니다.");
+					/*	
+						>>> 토큰 재발급 흐름 <<<
+						1) 사용자가 로그인하면
+						   → Access Token + Refresh Token 발급
+	
+						2) 사용자가 API 요청 시
+						   → Access Token 을 포함하여 요청
+	
+						3) Access Token 만료됨
+						   → 서버에 Refresh Token 을 보내 새로운 Access Token 요청
+	
+						4) 서버가 Refresh Token 검증 후
+						   → 새로운 Access Token 발급
+	
+						5) Refresh Token 도 만료되면
+						   → 다시 로그인이 필요로 하여서 로그아웃 시킴.
+		         */ 
+		         	
+		             // === fn 이라는 함수를 정의 ===
+		             // fn 이라는 함수가 하는 역할은 localStorage 안에 JWT 를 저장시켜주는 것이다. === // 
+			         const fn = function(data) {
+							const obj = {
+								memberid:JWT.memberid, 
+								name:JWT.name,
+									
+								grantType:data.grantType, 
+								accessToken:data.accessToken, 
+								accessTokenExpiresIn:data.accessTokenExpiresIn
+							};
+							
+						 // console.log(data);
+							localStorage.setItem('JWT', JSON.stringify(obj));
+							resolve(true);  // 결과값을 true 로 함.
+					  };
+					  
+				
+				  //  const url = /*[[@{/auth/reissue}]]*/ '';	  
+				  //  또는
+				      const contextPath = /*[[@{/}]]*/ '';
+					  // 현재 웹 애플리케이션의 Context Path를 자동으로 가져온다.
+					  // 예를 들어, Context Path가 /myapp이면 contextPath = "/myapp/"이 된다.
+				      const url = "/user-service"+contextPath+"auth/reissue";
+				  	    
+				      const formData = JSON.stringify(JWT);
+				      
+				   // Spring Security 에서 CSRF 사용중이므로 CSRF 토큰을 header에 넣어야 한다.
+				      const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+				      const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+				      
+					  const headers = {
+							  'Content-Type': 'application/json',
+							  [header]: token 
+					  };
+				      
+					  
+					  // 비동기 함수 fetchRequest(url, method, formData, responseType, headers = {}) 호출
+					  fetchRequest(url, "post", formData, "json", headers)	
+						.then(data => {  /* data 는 fetchRequest(url, "post", formData, "json", headers) 를 호출하여 return 받은 
+							               {grantType: 'Bearer', accessToken: 'eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzZW95aCIsImF1dGgiO…-_uog04gL2bbLLT1nYAWVPVWj1HCGil2kYMtXwQT-t729HqVM', accessTokenExpiresIn: 1756214725625, refreshToken: 'eyJhbGciOiJIUzM4NCJ9.eyJleHAiOjE3NTY4MTk0NjV9.J5AJ…_s70uQ0vaqhmkoIAcrodpRUg_RxjWPmgWzHXC4WYEpf80bgye'} 이런 형태의 json 데이터 이다.   
+							             */
+						    fn(data);   // 위에서 정의한 fn 함수에 data 값을 넣어 호출한다. 
+						})
+						.catch(error => { // 오류가 발생할 경우
+							alert(error);
+							console.log(error);
+							
+						//	logout();  // 아래에 정의한 logout() 함수 호출. 
+				    		resolve(false); // 결과값을 false 로 함.
+						});
+				
+			   }
+				
+		    });// end of return new Promise((resolve, reject) => {})--------------------------
+			
+		}// end of function reissue()-------------------------------------------------------------
+		
+			
+			
+		// 나의정보
+		function mypage(){
+			
+			const contextPath = /*[[@{/}]]*/ '';
+			// 현재 웹 애플리케이션의 Context Path를 자동으로 가져온다.
+			// 예를 들어, Context Path가 /myapp이면 contextPath = "/myapp/"이 된다.
+			
+			const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+			const token = JWT.accessToken;
+		//	alert(token);
+			
+			$.ajax({
+			      url: "/user-service"+contextPath+"member/mypage", 
+				  type: "GET",
+				  headers: {
+				    "Authorization": `Bearer ${token}`,
+				    "Content-Type": "application/json; charset=utf-8" // "Content-Type" 부분은 생략해도 무방하다.
+				  },
+				  dataType: "json",
+				  success: function(json) {
+					  console.log(JSON.stringify(json));
+					  /*
+					    {"memberid":"admin",
+						 "passwd":"$2a$10$jCchGNfxIF.R/1RmLUCXduyROHJKzD0K2br2WTjFkt26Pq8hvjJ.a",
+						 "enabled":"1",
+						 "name":"관리자",
+						 "registerday":"2026-02-28",
+						 "lastLoginDate":"2026-03-02T20:46:48",
+						 "authorities":["ROLE_ADMIN","ROLE_USER"]}
+					  */
+				      
+					  // location.href 를 사용할 때 Authorization 헤더에 JWT 토큰을 포함하는 것은 불가능 하다. 그러므로 아래처럼 사용할 수 없다.!!
+					  // location.href = contextPath+"member/myinfo"; // 성공 시 페이지 이동
+					  
+					  const lastLogin =
+						        (json.lastLoginDate != null)
+						            ? json.lastLoginDate.split('T').join(' ')
+						            : '';
+					  
+					 let v_html = `<div style='width: 70%; margin:0 auto;'>
+					                 <div style='color: red; font-size: 18pt; text-align: center;'>
+					                     <span style='color: blue;'>${json.name}</span> 님의 정보
+					                 </div>
+				                     <table class='table my-3'>
+				                       <tr> 
+				                          <th>아이디</th> <td>${json.memberid}</td> 
+				                       </tr>
+				                      
+				                       <tr> 
+				                          <th>성&nbsp;명</th> <td>${json.name}</td> 
+				                       </tr>
+				                      
+				                       <tr> 
+				                          <th>가입일자</th> <td>${json.registerday}</td> 
+				                       </tr>
+				                      
+				                       <tr> 
+				                          <th>마지막로그인일자</th> <td>${json.lastLoginDate}</td> 
+				                       </tr>
+				                      
+				                       <tr> 
+				                          <th>권한종류</th> <td>${json.authorities}</td> 
+				                       </tr>
+				                     </table>
+				                   </div>`;              
+					  
+					  $("div#mycontent").html(v_html);
+	
+				  },
+				  error: function(request, status, error){
+					alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+				  }
+				});
+			
+		}// end of function mypage()-------------------
+		
+		
+		// 관리자 페이지
+		function admin(){
+			
+			const contextPath = /*[[@{/}]]*/ '';
+			// 현재 웹 애플리케이션의 Context Path를 자동으로 가져온다.
+			// 예를 들어, Context Path가 /myapp이면 contextPath = "/myapp/"이 된다.
+			
+			const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+			const token = JWT.accessToken;
+		//	alert(token);
+			
+			$.ajax({
+			      url: "/user-service"+contextPath+"admin/main",
+				  type: "GET",
+				  headers: {
+				    "Authorization": `Bearer ${token}`,
+				    "Content-Type": "application/json; charset=utf-8" // "Content-Type" 부분은 생략해도 무방하다.
+				  },
+				  dataType: "json",
+				  success: function(json) {
+					  console.log(JSON.stringify(json));
+					  /*
+						 [{"memberid":"eomjh","passwd":null,"enabled":null,"name":"엄정화","registerday":"2026-03-02","lastLoginDate":null,"authorities":null}
+						 ,{"memberid":"seoyh","passwd":null,"enabled":null,"name":"서영학","registerday":"2026-03-01","lastLoginDate":"2026-03-02T20:23:28","authorities":null}]   
+					  */
+				      
+					  
+					  let v_html = `<div style='padding: 5%;'>
+					                  <div style='color: red; font-size: 18pt;'>관리자 전용 페이지</div>
+					                     <table class='table'>
+					                        <thead>
+						                      <tr class='table-active'>
+					                            <th colspan='4' class='h2 text-center'>회원명단</th>
+					                          </tr>
+					                          <tr>
+					                            <th>아이디</th>
+					                            <th>성명</th>
+					                            <th>가입일자</th>
+					                            <th>마지막로그인일자</th>
+					                          </tr>
+					                        </thead>
+					                        <tbody>`;
+					                   
+					  json.forEach((item, index, array) => {
+						  
+						  const lastLogin =
+						        (item.lastLoginDate != null)
+						            ? item.lastLoginDate.split('T').join(' ')
+						            : '';
+						  
+						  v_html += `<tr>
+						                <td>${item.memberid}</td>
+						                <td>${item.name}</td>
+						                <td>${item.registerday}</td>
+						                <td>${lastLogin}</td>
+						             </tr>`;
+					  });  
+					  
+					  v_html += `</table>
+					           </div>`;
+					  
+					  $("div#mycontent").html(v_html);
+	
+				  },
+				  error: function(request, status, error){
+					  switch(request.status) {
+						  case 401:
+						      location.href = "/user-service"+contextPath+"exception/noAuthentication";
+							  break;
+						  
+						  case 403:
+						      location.href = "/user-service"+contextPath+"exception/accessDeny";
+							  break;
+							  
+						  default:
+							  alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);	  
+							  break;	  
+					  }
+				  }
+				});
+			
+		}// end of function admin()--------------------------		
+		
+			
+		// 로그아웃
+		function logout(){
+			
+		 //	localStorage.clear();  // localStorage 전체 삭제하기
+			localStorage.removeItem("JWT");  // localStorage 에서 키값이 JWT 이라는 데이터 삭제하기 
+			
+		    $(".login-before").show();
+			$(".login-after").hide();
+		    
+			const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+		    const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+		    fetch("http://localhost:8000/user-service/auth/logout", {
+		        method: 'POST',
+		        headers: {
+		            [header]: token
+		        }
+		    })
+		    .finally(() => {
+		        window.location.href = "http://localhost:8000/user-service/index";
+		        alert("로그아웃 되었습니다.");
+		    }); // finally를 사용하여 logout 성공 여부와 관계없이 항상 페이지 이동
+			
+		}// end of function logout()-------------------	
+		
+	/*]]>*/	
+    </script>
+	
+</body>
+</html>

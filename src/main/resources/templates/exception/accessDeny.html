@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/layout_main :: layout(~{::title}, ~{::link}, ~{::style}, ~{::script}, ~{::div})}" 
+      lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"> 
+<!-- ::title은 현재 페이지의 title 태그를 파라미터로 전달한다. -->
+
+<title>403(Forbidden) 에러</title>
+
+<link rel="stylesheet" href="" />
+
+<style type="text/css">
+    
+    div#container {
+     /* border: solid 1px red; */
+    	width: 80%;
+    	margin: 50px auto;
+    }
+    
+</style>
+
+<script type="text/javascript"></script>
+
+<div class="container" id="container">
+  <p class="h2 text-danger text-center">403 Forbidden 에러!! 접근권한이 없어서 접근이 차단 되었습니다.</p>	  
+</div>
+
+</html>

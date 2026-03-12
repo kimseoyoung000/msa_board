@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/layout_main :: layout(~{::title}, ~{::link}, ~{::style}, ~{::script}, ~{::div})}" 
+      lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"> 
+<!-- ::title은 현재 페이지의 title 태그를 파라미터로 전달한다. -->
+
+<title>401(Unauthorized) 에러</title>
+
+<link rel="stylesheet" href="" />
+
+<style type="text/css">
+    
+    div#container {
+     /* border: solid 1px red; */
+    	width: 80%;
+    	margin: 50px auto;
+    }
+    
+</style>
+
+<script type="text/javascript"></script>
+
+<div class="container" id="container">
+  <p class="h2 text-danger text-center">401(Unauthorized) 에러!! 인증되지 않았거나, 유효한 인증 정보가 부족하여 요청이 거부되었습니다</p>	  
+</div>
+
+</html>

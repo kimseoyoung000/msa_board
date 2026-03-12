@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+
+    <div th:fragment="main_header">
+		<!-- 상단 네비게이션 시작 -->
+		<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top mx-4 py-3">
+			<!-- Brand/logo --> 
+			<a class="navbar-brand" th:href="@{/user-service/index}" style="margin-right: 10%;"><img th:src="@{/images/sist_logo.png}" /></a>
+			<!-- @{/} 은 자동으로 Context Path가 포함됨. 만약에 Context Path가 /myapp 이라면 @{/} 은 /myapp/으로 되어짐 -->
+			
+			<!-- 아코디언 같은 Navigation Bar 만들기 -->
+		    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+		      <span class="navbar-toggler-icon"></span>
+		    </button>
+			
+			<div class="collapse navbar-collapse" id="collapsibleNavbar">
+			  <ul class="navbar-nav h5">  <!-- .h5 는 글자크기임 -->   
+			     <li class="nav-item dropdown">
+			        <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" data-toggle="dropdown">Home</a> 
+			                                    <!--  .text-primary 는 글자색으로 파란색임 -->   
+			        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			           <a class="dropdown-item" th:href="@{/user-service/index}">시작</a>
+			           <a class="dropdown-item" href="javascript:admin()">관리자페이지</a>
+			        </div>
+			     </li>
+			     		     
+			     <li class="nav-item dropdown">
+			        <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" data-toggle="dropdown">로그인</a>  
+			        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			           
+					   <a class="dropdown-item login-before" th:href="@{/user-service/member/register}">회원가입</a>
+			           <a class="dropdown-item login-before" th:href="@{/user-service/member/login}">로그인</a>
+			           <!-- @{/member/login} → 자동으로 Context Path가 포함됨. Context Path가 /myapp 이라면 → /myapp/member/login으로 변환됨 -->
+			          
+					   <a class="dropdown-item login-after" href="javascript:mypage()">나의정보</a>
+					   <a class="dropdown-item login-after" href="javascript:logout()">로그아웃</a>
+					   
+			        </div>
+			     </li>
+			     
+			     <li class="nav-item dropdown">
+			        <a class="nav-link dropdown-toggle text-primary" href="#" id="navbarDropdown" data-toggle="dropdown">게시판</a>  
+			        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+			           <a class="dropdown-item" th:href="@{/board-service/board/list}">목록보기</a>
+			        </div>
+			     </li>
+			     
+			  </ul>
+			</div>
+			
+			<!-- === 로그인이 성공되어지면 로그인되어진 사용자의 성명을 출력하기 === -->
+			<div style="float: right;" class="login-after">
+			   <span id="member_name" style="color: navy; font-weight: bold;"></span> 님 로그인중..&nbsp;&nbsp;&nbsp;&nbsp;
+			   <a href="javascript:logout()">
+			      <i class="fa-solid fa-right-from-bracket"></i>&nbsp;&nbsp;
+			      <span style="font-size: 10pt;">로그아웃</span>
+			   </a> 
+			</div>
+				
+		</nav>
+		<!-- 상단 네비게이션 끝 -->
+	  	
+	  	<div class="h5" style="border: solid 0px red; width: 70%; margin: 0 auto; padding: 2% 0;">
+			<marquee> [공지사항] 쌍용교육센터 6강의실 수강생 여러분들의 수료후 프로그래머 입사를 진심으로 기원합니다.</marquee>
+	  	</div>
+	</div>  	
+		
+</body>
+</html>

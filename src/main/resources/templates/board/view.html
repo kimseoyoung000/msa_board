@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/layout_main :: layout(~{::title}, ~{::link}, ~{::style}, ~{::script}, ~{::section})}" 
+      lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"> 
+<!-- ::title 은   현재 페이지의 title   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 첫번째 파라미터로 전달한다. -->
+<!-- ::link 는    현재 페이지의 link    태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 두번째  파라미터로 전달한다. -->
+<!-- ::style 은   현재 페이지의 style   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 세번째 파라미터로 전달한다. -->
+<!-- ::script 는  현재 페이지의 script  태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 네번째 파라미터로 전달한다. -->
+<!-- ::section 은 현재 페이지의 section 태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 다섯번째 파라미터로 전달한다. -->
+<!-- 타임리프는 백엔드 서버에서 HTML을 동적으로 렌더링하는 용도로 사용된다. -->
+
+<head>
+<meta charset="UTF-8">
+<title>게시글 보기</title>
+
+<link rel="stylesheet" href="" />
+
+<style type="text/css"></style>
+
+<!--/* 자바스크립트 인라인 */-->
+<script th:inline="javascript">
+ /*<![CDATA[*/
+
+   // === 검색된결과 목록보기 ===
+   function goSearchedList() {
+ 	  
+ 	   // === 쿠키(Cookie) 값을 읽어올 때 자바스크립트를 이용하는 경우 시작 === //
+ 	   const cookies = document.cookie;  // 자바스크립트에서 접근 가능한 쿠키값을 읽어오는 것	
+ 	                                     // HttpOnly 쿠키(예: JSESSIONID)는 JavaScript 로 접근할 수 없다.
+ 	   console.log("쿠키 : ", cookies);
+ 	   // 쿠키 :  listURL=http://localhost:8000/board-service/board/list?searchType=subject&searchWord=java
+ 	   // 또는
+ 	   // 쿠키 : 
+ 		   
+ 	   if(cookies != "") {
+ 		// console.log("쿠키가 존재해요");
+ 		   
+ 		   let cookie_value = "";
+ 		
+ 		   const arr_cookie = cookies.split("; ");
+ 		   
+ 		   for(let i=0; i<arr_cookie.length; i++){
+ 			   const cookie_name = arr_cookie[i].substring(0, arr_cookie[i].indexOf("="));
+ 			   console.log(cookie_name);
+ 			   /*
+ 			      listURL
+ 			   */
+ 			  
+ 			   if(cookie_name == "listURL") {
+ 				   cookie_value = arr_cookie[i].substring(arr_cookie[i].indexOf("=")+1);
+ 				   console.log(cookie_value);
+ 			       //  http://localhost:8000/board-service/board/list?searchType=subject&searchWord=java
+ 				   break;
+ 			   }
+ 		   }// end of for--------------------
+ 		   
+ 	       location.href = cookie_value;
+ 	   }
+ 	   
+ 	   else {
+ 		 // console.log("쿠키가 없어요");
+ 	   }
+ 	   // === 쿠키(Cookie) 값을 읽어올 때 자바스크립트를 이용하는 경우 끝 === //
+ 	  
+   }// end of function goSearchedList() {}----------------------------------	 
+	 
+   
+   // 글삭제하기 
+   function goDelete(num) {
+	   
+	   const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+	   const jwttoken = JWT.accessToken;
+	   
+	   if(("accessToken" in JWT) && confirm("정말로 삭제 하시겠습니까?") ) {
+		// ("accessToken" in JWT) 은 JWT 객체에 accessToken 키가 존재하는지 확인. 
+		// JWT 객체에 accessToken 키가 존재하는 경우라면
+		   
+		    // ▣ CSRF AJAX 사용시 설정 및 실행하기 
+	   	    // templates/layout/layout_main.html 파일의 meta 태그 안에있는 content를 가져와서 AJAX  beforeSend(데이터를 전송하기전) 에 HTTP Header 를 SET 해야 한다.
+	   	    const csrftoken = $("meta[name='_csrf']").attr("content");
+	        const header = $("meta[name='_csrf_header']").attr("content");
+		   
+		    const contextPath = /*[[@{/}]]*/ "";
+			const url = "/board-service"+contextPath+"board/delete";
+			
+			$.ajax({
+				url: url,
+				type:"delete",
+				
+				headers: {
+				    "Authorization": `Bearer ${jwttoken}`
+				},
+				
+				data:{"num":num,
+					  "memberid":JWT.memberid}, // 로그인 되어진 사용자 ID 
+					  
+				dataType:"json",
+				
+			 // ▣ CSRF AJAX 사용시 설정 및 실행하기 (CSRF AJAX 사용시 type 이 GET 을 제외한 POST, DELETE, PUT 3개 모두는 헤더에 csrf값을 넣어주어야 한다.)
+	     	    beforeSend: function(xhr) {  
+				   xhr.setRequestHeader(header, csrftoken);
+				   // 데이터를 전송하기 전에 헤더에 csrf값을 넣어준다.
+	            },
+				
+				success: function(json){
+					console.log(JSON.stringify(json));
+					// {"n":1}
+					if(json.n == 1) {
+						alert("삭제 완료 했습니다. !!");
+					}
+					else if(json.n == 2) {
+						alert("다른 사용자의 글은 삭제할 수 없습니다. !!");
+					}
+					else {
+						alert("삭제 실패 했습니다. ㅜㅜ");
+					}
+					
+					location.href = "/board-service"+contextPath+"board/list";
+				},
+				error: function(request, status, error){
+				   alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			    } 
+			}); 
+		}
+
+   }// end of function goDelete(num)---------------------
+   
+   
+   
+   // 글수정하기 폼 띄우기 
+   function goUpdate_form(num) {
+	   
+	   const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+	   const jwttoken = JWT.accessToken;
+	   
+	   const memberid = $('input[type="hidden"]').val();
+	   
+	   if( ("accessToken" in JWT) && (memberid != JWT.memberid) ) {
+		   alert("다른 사용자의 글은 수정할 수 없습니다.");
+		   return;
+	   }
+	   
+       // 글제목
+       const subject = $('#mycontent > section > div > div > div > table > tbody > tr:nth-child(5) > td').text();
+       
+       // 글내용
+       const content = $('#mycontent > section > div > div > div > table > tbody > tr:nth-child(6) > td > p').text();
+       
+	   $("div.container").html(`
+
+			 <div style="margin:auto; padding-left: 3%;">
+			    <h3 class="my-5">게시판 글수정하기</h3> 
+			    
+			    <form name="updateFrm"> 
+			      
+			      <table style="width: 1024px" class="table table-bordered">
+			         <tr>
+			            <th style="width: 15%; background-color: #DDDDDD;">제목</th>
+			            <td>
+			                <input type="hidden" name="num" size="100" value="${num}" readonly />
+			                <input type="text"   name="subject" id="subject" size="100" value="${subject}" />
+			            </td>
+			         </tr>
+			         
+			         <tr>
+			            <th style="width: 15%; background-color: #DDDDDD; vertical-align: middle;">내용</th>
+			            <td>
+			               <textarea style="width: 100%; height: 400px;" name="content" id="content">${content}</textarea>       
+			            </td>
+			         </tr>
+			      </table>
+			      
+			      <div style="margin: 20px;">
+			         <button type="button" class="btn btn-secondary btn-sm mr-3" id="btnUpdate">수정완료</button>
+			         <button type="reset"  class="btn btn-secondary btn-sm mr-3">다시입력</button>
+			         <button type="button" class="btn btn-secondary btn-sm" onclick="javascript:location.href='list'">취소</button>
+			      </div>
+			         
+			    </form>
+			</div>				
+				
+		`);	   
+
+   }// end of function goUpdate_form(num)---------------------
+   
+   
+   // 수정완료 버튼 클릭시
+   $(document).on("click", "button#btnUpdate", function(){
+	   
+	    // 제목 유효성 검사
+		const subject = $("input#subject").val().trim();
+		if(subject == "") {
+			alert("글제목을 입력하세요!!");
+			return;
+		}
+		
+		// 내용 유효성 검사
+		const content = $("textarea#content").val().trim();
+		if(content == "") {
+			alert("내용을 입력하세요!!");
+			return;
+		}
+		
+		if(confirm('수정하시겠습니까?')) {
+		
+			const contextPath = /*[[@{/}]]*/ '';
+			// 현재 웹 애플리케이션의 Context Path를 자동으로 가져온다.
+			// 예를 들어, Context Path가 /myapp이면 contextPath = "/myapp/"이 된다.
+			
+			const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+			const jwttoken = JWT.accessToken;
+		//	alert(jwttoken);
+		
+		//  ▣ CSRF AJAX 사용시 설정 및 실행하기 
+	   	    // templates/layout/layout_main.html 파일의 meta 태그 안에있는 content를 가져와서 AJAX  beforeSend(데이터를 전송하기전) 에 HTTP Header 를 SET 해야 한다.
+	   	    const csrftoken = $("meta[name='_csrf']").attr("content");
+	        const header = $("meta[name='_csrf_header']").attr("content");
+			
+			$.ajax({
+			      url: "/board-service"+contextPath+"board/update",
+				  type: "POST",
+				  headers: {
+				    "Authorization": `Bearer ${jwttoken}`
+				  },
+				  data: $("form[name=updateFrm]").serialize(),
+				  dataType: "json",
+				
+				  // ▣ CSRF AJAX 사용시 설정 및 실행하기
+		     	  beforeSend: function(xhr) {  
+					  xhr.setRequestHeader(header, csrftoken);
+					  // 데이터를 전송하기 전에 헤더에 csrf값을 넣어준다.
+		          },
+				  
+		          success: function(json) {
+				      console.log(JSON.stringify(json));
+				      const num = json.n;
+					  location.href="/board-service"+contextPath+"board/view?num="+num;
+				  },
+				  error: function(request, status, error){
+					  switch(request.status) {
+						  case 401:
+						      location.href = "/board-service"+contextPath+"exception/noAuthentication";
+							  break;
+						  
+						  case 403:
+						      location.href = "/board-service"+contextPath+"exception/accessDeny";
+							  break;
+							  
+						  default:
+							  alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);	  
+							  break;	  
+					  }
+				  }
+			 });
+			
+		}
+		
+		else {
+			history.back();
+		}
+		
+   });// end of $(document).on("click", "button#btnUpdate", function(){}--------------
+  
+ /*]]>*/
+</script>
+
+</head>
+<body>
+  
+  <section>
+  
+	<div style="display: flex;" class="container" >
+	  <div style="margin:auto; padding-left: 3%;">	
+		<h3 class="my-5">게시글 내용보기 [ Spring JPA(Java Persistence API) + ORACLE ]</h3>
+		
+	    <!-- boardDto가 비어있지 않은 경우 -->
+        <div th:if="${boardDto != null}"> 
+            <input type="hidden" th:value="${boardDto.memberid}" />
+			<table style="width: 1024px" class="table table-bordered">
+				<tr>
+					<th style="width: 15%">게시글 번호</th>
+					<td th:text="${boardDto.num}"></td>
+				</tr>
+				<tr>
+					<th>작성자</th>
+					<td th:text="${boardDto.name}"></td>
+				</tr>
+				<tr>
+					<th>작성일자</th>
+					<td th:text="${#strings.replace(boardDto.regDate, 'T', ' ')}"></td>
+				</tr>
+				<tr>
+					<th>조회수</th>
+					<td th:text="${boardDto.readCount}"></td>
+				</tr>
+				<tr>
+					<th>제목</th>
+					<td th:text="${boardDto.subject}"></td>
+				</tr>
+				<tr>
+					<th style="vertical-align: middle;">내용</th>
+					<td valign="top" height="200">
+					  <p style="word-break: break-all;" th:text="${boardDto.content}"></p>
+					   <!--  
+					       style="word-break: break-all; 은 공백없는 긴영문일 경우 width 크기를 뚫고 나오는 것을 막는 것임. 
+					           그런데 style="word-break: break-all; 나 style="word-wrap: break-word; 은
+					           테이블태그의 <td>태그에는 안되고 <p> 나 <div> 태그안에서 적용되어지므로 <td>태그에서 적용하려면
+					       <table>태그속에 style="word-wrap: break-word; table-layout: fixed;" 을 주면 된다.
+					    -->
+					</td>
+				</tr>
+				<tr>
+					<th>이전 글제목</th>
+					<td>
+					    <!-- 이전글이 있을 때만 링크 보여주기 -->
+                        <a th:if="${preBoardDto != null}"
+                           th:href="@{/board-service/board/view(num=${preBoardDto.num}, searchType=${searchType}, searchWord=${searchWord})}"
+                           th:text="${preBoardDto.subject}"></a>
+                           
+                        <!-- 이전글이 없으면 대체 텍스트 보여주기 -->
+                        <span th:if="${preBoardDto == null}">이전글이 없습니다</span>   
+                    </td>
+				</tr>
+				<tr>
+					<th>다음 글제목</th>
+					<td>
+					    <!-- 다음글이 있을 때만 링크 보여주기 -->
+                        <a th:if="${nextBoardDto != null}"
+                           th:href="@{/board-service/board/view(num=${nextBoardDto.num}, searchType=${searchType}, searchWord=${searchWord})}"
+                           th:text="${nextBoardDto.subject}"></a>
+                           
+                        <!-- 다음글이 없으면 대체 텍스트 보여주기 -->
+                        <span th:if="${nextBoardDto == null}">다음글이 없습니다</span>
+                    </td>
+				</tr>
+			</table>
+			<br/>
+					
+			<button type="button" class="btn btn-secondary btn-sm mr-3"
+                    th:onclick="|location.href='@{/board-service/board/list}'|">전체목록보기</button>
+                    
+            <!--/* 여기서 | ... | 는 Thymeleaf의 리터럴 대체(Literal Substitution) 문법이다.
+            
+                | 가 없이 th:onclick="location.href='@{/board/list}'" 만 해주면 → Thymeleaf는 location.href='...'를 변수와 대입식처럼 해석하려다 오류발생함.
+                | 를 넣어서 th:onclick="|location.href='@{/board/list}'|" 해주면 → Thymeleaf는 전체를 문자열로 보고 @{...} 부분만 URL 변환해줌 → 정상 동작함.
+             
+                즉, | 안의 내용을 그대로 문자열로 처리하면서, @{...} 같은 Thymeleaf 표현식만 해석해 주는 것임.
+                   
+                [결과값]
+                onclick="location.href='/board/list'"
+                작은따옴표, 큰따옴표, 경로 전부 적절하게 문자열로 만들어줌.
+            */-->        
+            
+            <button type="button" class="btn btn-secondary btn-sm mr-3"
+                    onclick="goSearchedList()">검색된결과목록보기</button>
+            
+            <button type="button" class="btn btn-secondary btn-sm mr-3 login-after"
+                    th:onclick="|goUpdate_form('${boardDto.num}')|">수정하기</button>
+            
+            <button type="button" class="btn btn-secondary btn-sm mr-3 login-after"
+                    th:onclick="|goDelete('${boardDto.num}')|">삭제하기</button>
+        </div> 
+		
+		<!-- boardDto가 비어있는 경우 -->
+        <div th:if="${boardDto == null}" style="padding: 50px 0; font-size: 16pt; color: red;">
+            존재하지 않습니다
+        </div>
+		
+	 </div>    
+	</div>
+	
+  </section>
+  
+</body>
+</html> 

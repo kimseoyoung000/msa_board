@@ -1,0 +1,58 @@
+@charset "UTF-8";
+
+div#divRegisterFrm {
+	text-align: center;
+	margin-top: 3%;
+}
+
+table#tblMemberRegister {
+ /* border: solid 1px red; */  
+	width: 50%;
+	margin: 1% auto;
+}
+
+table#tblMemberRegister th {
+	border: solid 1px gray;
+	height: 50px;
+	background-color: silver;
+	font-size: 14pt;
+}
+
+table#tblMemberRegister td {
+	line-height: 250%;
+	padding: 1.2% 0;
+}
+
+span.star {
+	color: red;
+	font-weight: bold;
+	font-size: 13pt;
+}
+
+table#tblMemberRegister > tbody > tr:first-child > td {
+	padding-top: 5%;
+}
+
+table#tblMemberRegister > tbody > tr > td:first-child {
+	width: 20%;
+	font-weight: bold;
+	text-align: left;
+}
+
+table#tblMemberRegister > tbody > tr > td:nth-child(2) {
+	width: 80%;
+	text-align: left;
+}
+
+input.requiredInfo {
+	height: 30px;
+}
+
+img#idcheck {
+	cursor: pointer;
+}
+
+span.error {
+	color: red;
+	font-size: 10pt;
+}

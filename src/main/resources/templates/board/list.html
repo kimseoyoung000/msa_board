@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html th:replace="~{layout/layout_main :: layout(~{::title}, ~{::link}, ~{::style}, ~{::script}, ~{::section})}" 
+      lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"> 
+<!-- ::title 은   현재 페이지의 title   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 첫번째 파라미터로 전달한다. -->
+<!-- ::link 는    현재 페이지의 link    태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 두번째  파라미터로 전달한다. -->
+<!-- ::style 은   현재 페이지의 style   태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 세번째 파라미터로 전달한다. -->
+<!-- ::script 는  현재 페이지의 script  태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 네번째 파라미터로 전달한다. -->
+<!-- ::section 은 현재 페이지의 section 태그를 읽어다가 templates/layout/layout_main.html 파일의 th:fragment="layout(title, link, css, script, content)" 에 있는 다섯번째 파라미터로 전달한다. -->
+<!-- 타임리프는 백엔드 서버에서 HTML을 동적으로 렌더링하는 용도로 사용된다. -->
+
+<head>
+<meta charset="UTF-8">
+<title>게시글 목록 보기</title>
+
+<link rel="stylesheet" href="" />
+
+<style type="text/css">
+	
+	tbody > tr > td:nth-child(1) > span:nth-child(1)  { 
+	   /* color: blue; */  
+	      display: none;  	
+	}
+	
+	div.container > table > tbody > tr:hover {
+		cursor: pointer;
+	}
+
+</style>
+
+
+<!--/* 자바스크립트 인라인 */-->
+<script th:inline="javascript">
+ /*<![CDATA[*/
+	
+	$(function(){
+		
+	//	console.log(localStorage.getItem("JWT"));
+		/*
+		  {"memberid":"seoyh","name":"서영학","grantType":"Bearer","accessToken":"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJzZW95aCIsImF1dGgiOiJST0xFX1VTRVIiLCJleHAiOjE3NzMwNjg4OTZ9.4FP6-eyjHrA7TAQaisANfxjyBvIjGIXHHHUzyd5Gl4hlNCMZ3ubrU1l8si7OiXE3","accessTokenExpiresIn":1773068896250,"refreshToken":null}
+		*/
+		
+		const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+		// 만약에 localStorage.getItem("JWT") 가 null 또는 undefined라면, 기본적으로 빈 객체 {}를 할당.
+		
+		if( ("accessToken" in JWT) ) { // ("accessToken" in JWT) 은 JWT 객체에 accessToken 키가 존재하는지 확인. 
+			// JWT 객체에 accessToken 키가 존재하는 경우라면   
+			
+			$("div#loginNameDisplay").html(JWT.name+" 님 로그인중");
+		}
+				
+		$("input#searchWord").keyup(function(e){
+			if(e.keyCode == 13) {
+				// 검색어에 엔터를 했을 경우
+				goSearch();
+			}
+		});
+		
+		
+		// 검색시 검색조건 및 검색어 값 유지시키기
+		if (/*[[${!#strings.isEmpty(searchType) and !#strings.isEmpty(searchWord)}]]*/ false) {
+	        $("select#searchType").val(/*[[${searchType}]]*/ "");
+	        $("input#searchWord").val(/*[[${searchWord}]]*/ "");
+	    }
+		
+		
+		// 글 1개 보기
+		$("tbody > tr.exists").click(function(event){
+		 // alert("호호");
+		    
+		    const $target = $(event.target); // <td>태그이다.
+		 // console.log("확인용 $target.html() => " + $target.html() );
+		   
+		    const num = Number($target.parent().find("span:nth-child(1)").text());
+		 // console.log("확인용 num => " + num);
+		 
+		 // JS 안에서 Thymeleaf 값을 넣을 때는 th:inline="javascript" 와 /*[[...]]*/ 구문을 사용해야 안전하다.
+		 
+		    const ctxViewUrl = /*[[@{/board/view}]]*/ ""; // context path + "/board/view"
+		    // URL 생성
+            // @{...} 문법 사용 → context path 자동 포함
+            
+            // 로그인 되어진 사용자가 쓴글인지, 아닌지에 따라서 조회수 증가를 위해서 사용자 아이디값을 넘겨주도록 한다.
+            let memberid = "";
+            if( ("accessToken" in JWT) ) { // ("accessToken" in JWT) 은 JWT 객체에 accessToken 키가 존재하는지 확인. 
+			// JWT 객체에 accessToken 키가 존재하는 경우라면   
+			
+            	memberid = JWT.memberid;
+			}
+            		 
+		    if (/*[[${#strings.isEmpty(searchType) or #strings.isEmpty(searchWord)}]]*/ false) {  
+		    	// false 라고 넣어준 이유는 IDE(통합 개발 환경(Integrated Development Environment)가 인식할 수 있도록 임시값인 false 를 넣어서 
+		    	// IDE 파서가 만족하도록 만든다. false 를 넣지 않더라도 랜더링(실행)을 하면 정상적으로 작동은 하지만 Natural Template 을 사용하는 경우, 즉 그냥 html 파일을 열었을때 
+		    	// 주석처리 되어 if() 만 남게 되므로 문법상 오류를 범하지 않도록 임시값인 false 를 넣어주도록 한다.
+		    	
+                // 검색이 없는 경우
+                // 여러 조건은 or / and 로 연결
+                
+                location.href = "/board-service"+ctxViewUrl + "?num=" + num + "&memberid=" + memberid;
+                
+                // 쿼리 파라미터는 (paramName=${value}, ...) 형식으로 작성
+		    }
+		    else {
+		        // 검색이 있는 경우
+		        const searchType = /*[[${searchType}]]*/ "";
+		        const searchWord = /*[[${searchWord}]]*/ "";
+		        location.href = "/board-service"+ctxViewUrl + "?num=" + num + "&memberid=" + memberid + "&searchType=" + searchType + "&searchWord=" + searchWord;
+		    }
+		    
+		});
+		
+	});// end of $(function(){})---------------------------------------------
+
+  // Function Declaration
+  function goSearch() {
+	
+	const contextPath = /*[[@{/}]]*/ ""; // Natural Template 을 사용하여 데이터 입력한 것임. 
+		
+	const frm = document.searchFrm;
+	frm.method = "GET";
+	frm.action =  "/board-service"+contextPath+"board/list";  
+	frm.submit();
+	
+	<!--/* 
+	  @{...} → context path 자동 포함 (예: /myapp/board/list)
+      JavaScript 안에서 사용할 때는 /*[[...]]*/ 문법을사용함 
+    */-->
+	   
+	//  웹브라우저에서 HTML만 열 경우에는 /* */ 부분은 주석으로 처리되어 정적인 데이터값인 '' 만 남게 되어서 frm.action = ''; 으로 되어지고
+	//  서버에서 랜더링 되어 Thymeleaf로 처리될 경우 /* */ 부분은 삭제되고 frm.action = [[@{/board/list}]]; 으로 되어진다.
+	//  <!--/*  [[]] 은 Thymeleaf에서 값을 넣어줄 때 사용하는 문법이다.  */-->    
+	//  @{/board/list} 은 context path를 자동으로 포함한 URL을 생성해주는 것이다. 즉, "context path"+"/board/list" 인 것이다.
+	  
+	//  Natural Template 을 사용하는 이유는 웹디자이너 나 웹퍼블리셔는 굳이 서버를 랜더링 하지 않고, 그냥 html 파일만 열어서 정적인 데이터만 있으면 일을 할 수 있으므로
+	//  Natural Template 을 사용하도록 한다. 그러면 개발자와 웹디자이너 나 웹퍼블리셔가 협업이 가능하며, 프로젝트 개발 시간을 단축할 수 있기 때문이다. 
+	
+  }// end of function goSearch()--------------------
+
+  
+  // >> 게시글쓰기 버튼 클릭시 <<
+  function write_form() {
+	  
+		const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+		const token = JWT.accessToken;
+	//	alert(token);
+	    
+	    if( ("accessToken" in JWT) ) { // ("accessToken" in JWT) 은 JWT 객체에 accessToken 키가 존재하는지 확인. 
+			// JWT 객체에 accessToken 키가 존재하는 경우라면   
+	    	// 로그인 되어진 사용자 ID 및 성명 
+		    const memberid = JWT.memberid;
+		    const name = JWT.name;
+			
+			$("div.container").html(`
+					
+				 <div style="margin:auto; padding-left: 3%;">
+				    <h3 class="my-5">게시판 글쓰기</h3> 
+				    
+				    <form name="addFrm"> 
+				      
+				      <table style="width: 1024px" class="table table-bordered">
+				         <tr>
+				            <th style="width: 15%; background-color: #DDDDDD;">제목</th>
+				            <td>
+				                <input type="text" name="subject" id="subject" size="100" />
+				            </td>
+				         </tr>
+				         <tr>
+				            <th style="width: 15%; background-color: #DDDDDD;">작성자</th>
+				            <td>
+				                <input type="hidden" name="memberid" value="${memberid}" readonly /> 
+				                <input type="text" name="name" value="${name}" readonly />        
+				            </td>
+				         </tr>
+				         <tr>
+				            <th style="width: 15%; background-color: #DDDDDD; vertical-align: middle;">내용</th>
+				            <td>
+				               <textarea style="width: 100%; height: 400px;" name="content" id="content"></textarea>       
+				            </td>
+				         </tr>
+				      </table>
+				      
+				      <div style="margin: 20px;">
+				         <button type="button" class="btn btn-secondary btn-sm mr-3" id="btnWrite">글쓰기</button>
+				         <button type="reset"  class="btn btn-secondary btn-sm mr-3">다시입력</button>
+				         <button type="button" class="btn btn-secondary btn-sm" onclick="javascript:location.href='list'">취소</button>
+				      </div>
+				         
+				    </form>
+				</div>				
+					
+			`);			
+		}
+	  
+  }// end of function write_form()----------------------- 
+
+
+  // >> 글쓰기 버튼 클릭시 <<
+  $(document).on("click", "button#btnWrite", function(){
+	 
+	    const contextPath = /*[[@{/}]]*/ '';
+		// 현재 웹 애플리케이션의 Context Path를 자동으로 가져온다.
+		// 예를 들어, Context Path가 /myapp이면 contextPath = "/myapp/"이 된다.
+		
+		const JWT = JSON.parse(localStorage.getItem("JWT")) || {}; // JWT 토큰이 저장된 곳
+		const jwttoken = JWT.accessToken;
+	//	alert(jwttoken);
+	
+	//  ▣ CSRF AJAX 사용시 설정 및 실행하기 
+   	    // templates/layout/layout_main.html 파일의 meta 태그 안에있는 content를 가져와서 AJAX  beforeSend(데이터를 전송하기전) 에 HTTP Header 를 SET 해야 한다.
+   	    const csrftoken = $("meta[name='_csrf']").attr("content");
+        const header = $("meta[name='_csrf_header']").attr("content");
+		
+		$.ajax({
+		      url: "/board-service"+contextPath+"board/write",
+			  type: "POST",
+			  headers: {
+			    "Authorization": `Bearer ${jwttoken}`
+			  },
+			  data: $("form[name=addFrm]").serialize(),
+			  dataType: "json",
+			
+			  // ▣ CSRF AJAX 사용시 설정 및 실행하기
+	     	  beforeSend: function(xhr) {  
+				  xhr.setRequestHeader(header, csrftoken);
+				  // 데이터를 전송하기 전에 헤더에 csrf값을 넣어준다.
+	          },
+			  
+	          success: function(json) {
+			      console.log(JSON.stringify(json));
+				  location.href="/board-service"+contextPath+"board/list";
+			  },
+			  error: function(request, status, error){
+				  switch(request.status) {
+					  case 401:
+					      location.href = "/board-service"+contextPath+"exception/noAuthentication";
+						  break;
+					  
+					  case 403:
+					      location.href = "/board-service"+contextPath+"exception/accessDeny";
+						  break;
+						  
+					  default:
+						  alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);	  
+						  break;	  
+				  }
+			  }
+		 });
+	  
+  });  
+  
+ /*]]>*/
+</script>
+
+</head>
+<body>
+  
+  <section>  
+  
+	  <div class="container my-5">
+		<h3 style="display: inline-block;">게시글 목록 [ Spring JPA(Java Persistence API) + ORACLE ]</h3> 
+        
+	    <div class="login-after" id="loginNameDisplay"
+	         style="display: inline-block; color: #990000; margin-left: 20%;"> 
+
+		</div>
+		
+		<div>&nbsp;</div>
+		
+		<table class="table table-hover">
+		    <thead>
+		    	<tr class="login-after">
+		    		<th colspan="5" class="text-right">
+		    		   <button type="button" class="btn btn-info" onclick="javascript:write_form()">게시글쓰기</button> 
+		    		</th> 
+		    	</tr>
+		    	<tr>
+		    		<th width="10%">번호</th>
+		    		<th>제목</th>
+		    		<th width="15%">작성자</th>
+		    		<th width="15%">작성일자</th>
+		    		<th width="10%">조회수</th>
+		    	</tr>
+		    </thead>
+		    
+		    <tbody>
+		    <!-- 게시글 목록이 존재할 경우 -->
+			    <tr th:if="${#lists.isEmpty(boardDtoList)} == false"
+			        th:each="boardDto, status : ${boardDtoList}"
+			        class="exists">
+			        <td>
+			            <span th:text="${boardDto.num}"></span>
+			            <span th:text="${totalDataCount - (currentShowPageNo - 1) * sizePerPage - status.index}"></span> 
+					    <!--/* >>> 페이징 처리시 보여주는 순번 공식 <<<
+								   데이터개수 - (페이지번호 - 1) * 1페이지당보여줄개수 - 인덱스번호 => 순번 
+								
+								   <예제>
+								   데이터개수 : 12
+								   1페이지당보여줄개수 : 5
+								
+								   ==> 1 페이지       
+								   12 - (1-1) * 5 - 0  => 12
+								   12 - (1-1) * 5 - 1  => 11
+								   12 - (1-1) * 5 - 2  => 10
+								   12 - (1-1) * 5 - 3  =>  9
+								   12 - (1-1) * 5 - 4  =>  8
+								
+								   ==> 2 페이지
+								   12 - (2-1) * 5 - 0  =>  7
+								   12 - (2-1) * 5 - 1  =>  6
+								   12 - (2-1) * 5 - 2  =>  5
+								   12 - (2-1) * 5 - 3  =>  4
+								   12 - (2-1) * 5 - 4  =>  3
+								
+								   ==> 3 페이지
+								   12 - (3-1) * 5 - 0  =>  2
+								   12 - (3-1) * 5 - 1  =>  1 
+						*/-->
+			    	</td>
+					<td th:text="${boardDto.subject}"></td>
+					<td th:text="${boardDto.name}"></td>
+					<td th:text="${#strings.substring(boardDto.regDate, 0, 10)}"></td>
+					<td style="padding-left: 2%;" th:text="${boardDto.readCount}"></td>
+				</tr>
+						    
+				<!-- 게시글 목록이 비어있을 경우 -->
+				<tr th:if="${#lists.isEmpty(boardDtoList)}">
+				    <td colspan="4" class="text-center" style="color: red;">
+					    게시글 데이터가 존재하지 않습니다
+					</td>
+			    </tr>
+	        </tbody>
+		    
+		</table>
+		
+		<div align="center" style="border: solid 0px gray; width: 80%; margin: 30px auto;">  
+		     <!--/* [(${pageBar})] */--> <!--/* Model 에 들어있는 pageBar 는 태그가 들어간 경우이므로 [[${}]] 이 아닌 [(${})] 으로 해야 한다. */-->
+		     <!--/* 또는 */-->
+		     <span th:utext="${pageBar}"></span>
+		</div>
+		
+		<div style="display: flex; margin-top: 50px;">
+			<form name="searchFrm" style="margin: auto;">
+		        <select name="searchType" id="searchType" style="height: 30px;">
+		           <option value="">검색조건선택</option>
+		           <option value="subject">글제목</option>
+		           <option value="content">글내용</option>
+		           <option value="all">글제목+글내용</option>
+		           <option value="name">글쓴이</option>
+		        </select>
+		        <input type="text" name="searchWord" id="searchWord" size="40" autocomplete="off" />
+		        <input type="text" style="display: none;" /> <!--/* form 태그내에 input 태그가 오로지 1개 뿐일경우에는 엔터를 했을 경우 검색이 되어지므로 이것을 방지하고자 만든것이다. */--> 
+		        <button type="button" class="btn btn-secondary btn-sm" onclick="goSearch()">검색</button>
+		   	</form>
+		   	<a th:href="@{/board-service/board/list}" class="btn btn-secondary btn-sm">전체보기</a>
+	   	</div>
+	       
+	  </div>  
+
+  </section>
+</body>
+</html> 
