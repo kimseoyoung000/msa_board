@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "sy0410/msa_board"
-        SERVER_IP = "52.79.228.145"
+        SERVER_IP = "3.37.32.242"
         CONTAINER_NAME = "msa_board"
     }
 

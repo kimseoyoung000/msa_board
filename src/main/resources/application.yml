@@ -105,7 +105,7 @@ eureka:
     register-with-eureka: true  # 우리가 만든 스프링 어플리케이션 이름이 msa_userservice 인 것을 Service Discovery 서버상에 서비스 클라이언트로 등록하겠다고 설정해주는 것이다. 
     fetch-registry: true        # eureka.client.fetch-registry=true 는 EUREKA(유레카) 서버로 부터 인스턴스들의 정보를 주기적으로 가져올 것인지를 설정하는 속성이다. true 로 설정하면 갱신된 정보를 받겠다는 설정이다. 
     service-url:                # 유레카 서버의 위치를 지정하는 것임.
-      defaultZone: http://52.79.228.145:8761/eureka/  # http://127.0.0.1:8761/eureka 에 스프링 어플리케이션 이름이 msa_userservice 인 마이크로서비스 정보를 등록하겠다는 말이다.
+      defaultZone: http://3.37.32.242:8761/eureka/  # http://127.0.0.1:8761/eureka 에 스프링 어플리케이션 이름이 msa_userservice 인 마이크로서비스 정보를 등록하겠다는 말이다.
                                        #/eureka 를 붙이는 이유
                                        #Eureka Server 로 접근할때 REST API 기본 경로가 /eureka 이다.
                                        #즉, Eureka Client 들이 Eureka Server 로 등록요청 및 조회요청은 Eureka Server 의 /eureka 경로로 전달되도록 설계되었기 때문이다.
